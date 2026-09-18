@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Prebuilt binaries must never be touched by line-ending normalization
+bin/* binary

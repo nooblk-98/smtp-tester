@@ -22,7 +22,6 @@ Download the binary for your platform from the [`latest` release](https://github
 ```bash
 curl -fsSL -o smtp-tester https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-linux-amd64
 chmod +x smtp-tester
-./smtp-tester --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 **macOS (Apple Silicon):**
@@ -30,14 +29,12 @@ chmod +x smtp-tester
 ```bash
 curl -fsSL -o smtp-tester https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-darwin-arm64
 chmod +x smtp-tester
-./smtp-tester --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 Invoke-WebRequest -Uri https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
-.\smtp-tester.exe --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 Other available assets: `smtp-tester-linux-arm64` and `smtp-tester-darwin-amd64`. Tagged releases (`v1.2.3`, ...) get a pinned, versioned release with the same assets, if you'd rather not track `latest`.

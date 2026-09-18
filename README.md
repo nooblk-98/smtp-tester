@@ -37,7 +37,7 @@ chmod +x smtp-tester
 Invoke-WebRequest -Uri https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
 ```
 
-Other available assets: `smtp-tester-linux-arm64` and `smtp-tester-darwin-amd64`. Tagged releases (`v1.2.3`, ...) get a pinned, versioned release with the same assets, if you'd rather not track `latest`.
+Other available assets: `smtp-tester-linux-arm64` and `smtp-tester-darwin-amd64`. Every CI run also cuts a pinned, versioned [release](https://github.com/nooblk-98/smtp-tester/releases) (`v1.2.3`, ...) with the same assets and its own patch version, if you'd rather not track `latest`.
 
 > [!TIP]
 > Binaries are also committed to [`bin/`](bin/) on `main` on every build, so `raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/<file>` works as an alternative download source.
@@ -110,8 +110,9 @@ go build -o smtp-tester .
 
 ## How releases are built
 
-[`.github/workflows/build.yml`](.github/workflows/build.yml) cross-compiles the CLI for `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, and `windows/amd64` on every push to `main`, then:
+[`.github/workflows/build.yml`](.github/workflows/build.yml) cross-compiles the CLI for `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, and `windows/amd64` on every push to `main` (and on version tags), then:
 
-1. Publishes the binaries as assets on the rolling `latest` GitHub Release.
-2. Commits the binaries into [`bin/`](bin/) on `main` as a secondary distribution path.
-3. On version tags (`v*`), also cuts a pinned, versioned release with the same assets.
+1. Reads the highest existing `vMAJOR.MINOR.PATCH` git tag, bumps `PATCH` by one, and pushes the new tag (skipped when the run was itself triggered by pushing a `v*` tag — that tag is used as-is).
+2. Cuts a pinned, versioned GitHub Release for that tag with the build assets, and marks it as the repo's "Latest" release.
+3. Also publishes the binaries as assets on the separate, rolling `latest` release (stable URL, always overwritten).
+4. Commits the binaries into [`bin/`](bin/) on `main` as a secondary distribution path.

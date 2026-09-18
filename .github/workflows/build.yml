@@ -10,6 +10,38 @@ permissions:
   contents: write
 
 jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.compute.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: compute
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "version=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git fetch --tags --force
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n1)
+          if [ -z "$latest" ]; then
+            latest="v0.0.0"
+          fi
+          IFS=. read -r major minor patch <<< "${latest#v}"
+          new="v${major}.${minor}.$((patch + 1))"
+
+          git config user.name "Lahiru S Liyanage"
+          git config user.email "liyanagelsofficial@gmail.com"
+          git tag "$new"
+          git push origin "$new"
+
+          echo "version=$new" >> "$GITHUB_OUTPUT"
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -54,9 +86,8 @@ jobs:
           path: ${{ env.BIN_PATH }}
 
   release:
-    needs: build
+    needs: [bump-version, build]
     runs-on: ubuntu-latest
-    if: github.ref_type == 'tag' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -66,10 +97,29 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
-          name: ${{ github.ref_type == 'tag' && github.ref_name || 'Latest build' }}
-          prerelease: ${{ github.ref_type != 'tag' }}
-          make_latest: ${{ github.ref_type == 'tag' }}
+          tag_name: ${{ needs.bump-version.outputs.version }}
+          name: ${{ needs.bump-version.outputs.version }}
+          prerelease: false
+          make_latest: true
+          files: dist/*
+
+  release-latest:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          prerelease: false
+          make_latest: false
           files: dist/*
 
   publish-latest:

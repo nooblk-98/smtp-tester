@@ -16,17 +16,17 @@ import (
 const version = "1.0.0"
 
 type config struct {
-	host       string
-	port       int
-	sender     string
-	receiver   string
-	username   string
-	password   string
-	timeout    time.Duration
-	useTLS     bool
+	host        string
+	port        int
+	sender      string
+	receiver    string
+	username    string
+	password    string
+	timeout     time.Duration
+	useTLS      bool
 	useStartTLS bool
-	insecure   bool
-	verbose    bool
+	insecure    bool
+	verbose     bool
 }
 
 func main() {

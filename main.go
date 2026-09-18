@@ -1,5 +1,6 @@
 // Command smtp-tester checks connectivity and basic deliverability handshake
-// against an SMTP server without sending a real message body.
+// against an SMTP server. By default no message body is sent (RSET instead
+// of DATA); pass -send to actually deliver a test email to -receiver.
 package main
 
 import (
@@ -12,6 +13,14 @@ import (
 	"strings"
 	"time"
 )
+
+const testMessageTemplate = "From: %s\r\n" +
+	"To: %s\r\n" +
+	"Subject: smtp-tester test email\r\n" +
+	"Date: %s\r\n" +
+	"Message-ID: <%d@smtp-tester>\r\n" +
+	"\r\n" +
+	"This is a test email sent by smtp-tester to verify SMTP connectivity.\r\n"
 
 const version = "1.0.0"
 
@@ -27,6 +36,7 @@ type config struct {
 	useStartTLS bool
 	insecure    bool
 	verbose     bool
+	send        bool
 }
 
 func main() {
@@ -37,7 +47,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("\n✅ SUCCESS: SMTP server accepted the full handshake.")
+	if cfg.send {
+		fmt.Printf("\n✅ SUCCESS: test email sent to %s.\n", cfg.receiver)
+	} else {
+		fmt.Println("\n✅ SUCCESS: SMTP server accepted the full handshake.")
+	}
 }
 
 func parseFlags() config {
@@ -57,6 +71,7 @@ func parseFlags() config {
 	flag.BoolVar(&cfg.useStartTLS, "starttls", true, "Upgrade with STARTTLS if the server offers it")
 	flag.BoolVar(&cfg.insecure, "insecure", false, "Skip TLS certificate verification")
 	flag.BoolVar(&cfg.verbose, "verbose", false, "Print each SMTP step")
+	flag.BoolVar(&cfg.send, "send", false, "Actually send a test email to -receiver instead of just checking the handshake (RSET)")
 	flag.BoolVar(&showVersion, "version", false, "Print version and exit")
 
 	flag.Usage = func() {
@@ -166,9 +181,25 @@ func run(cfg config) error {
 		return fmt.Errorf("RCPT TO failed: %w", err)
 	}
 
-	logStep(cfg, "→ Resetting session (no message body sent)")
-	if err := client.Reset(); err != nil {
-		return fmt.Errorf("RSET failed: %w", err)
+	if cfg.send {
+		logStep(cfg, "→ Sending DATA (test email body)")
+		wc, err := client.Data()
+		if err != nil {
+			return fmt.Errorf("DATA failed: %w", err)
+		}
+		msg := fmt.Sprintf(testMessageTemplate, cfg.sender, cfg.receiver, time.Now().Format(time.RFC1123Z), time.Now().UnixNano())
+		if _, err := wc.Write([]byte(msg)); err != nil {
+			return fmt.Errorf("writing message body failed: %w", err)
+		}
+		if err := wc.Close(); err != nil {
+			return fmt.Errorf("server rejected message body: %w", err)
+		}
+		logStep(cfg, "→ Test email accepted by server")
+	} else {
+		logStep(cfg, "→ Resetting session (no message body sent)")
+		if err := client.Reset(); err != nil {
+			return fmt.Errorf("RSET failed: %w", err)
+		}
 	}
 
 	logStep(cfg, "→ Sending QUIT")

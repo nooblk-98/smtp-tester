@@ -1,8 +1,9 @@
 # smtp-tester
 
 A tiny, dependency-free CLI to test SMTP connectivity: connects, does
-EHLO/STARTTLS/AUTH/MAIL FROM/RCPT TO, then RSET+QUIT — no message is
-actually sent.
+EHLO/STARTTLS/AUTH/MAIL FROM/RCPT TO, then RSET+QUIT by default — no
+message is actually sent unless you pass `--send`, in which case a real
+test email is delivered to `--receiver`.
 
 Prebuilt binaries are published as GitHub Release assets on every push to
 `main`, so you can run it without installing Go.
@@ -60,6 +61,7 @@ same assets, if you'd rather not track `latest`.
 | `--insecure`  | `false` | Skip TLS certificate verification                  |
 | `--timeout`   | `10s`   | Connection/command timeout                         |
 | `--verbose`   | `false` | Print each SMTP step                               |
+| `--send`      | `false` | Actually deliver a test email to `--receiver` instead of RSET |
 | `--version`   | -       | Print version and exit                             |
 
 ## Examples
@@ -79,6 +81,13 @@ Verbose, self-signed/internal relay:
 ```bash
 ./smtp-tester --smtphost=mail.internal --port=25 --insecure --verbose \
   --sender=me@internal --receiver=you@internal
+```
+
+Actually send a test email:
+```bash
+./smtp-tester --smtphost=smtp.gmail.com --port=587 --tls=false --starttls \
+  --user=me@example.com --password=secret --send \
+  --sender=me@example.com --receiver=you@example.com
 ```
 
 Exit code is `0` on success and `1` on failure, so it's easy to use in scripts/CI.

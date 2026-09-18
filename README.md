@@ -1,19 +1,24 @@
 # smtp-tester
 
-A tiny, dependency-free CLI to test SMTP connectivity: connects, does
-EHLO/STARTTLS/AUTH/MAIL FROM/RCPT TO, then RSET+QUIT by default — no
-message is actually sent unless you pass `--send`, in which case a real
-test email is delivered to `--receiver`.
+A tiny, dependency-free command-line tool for testing SMTP server connectivity. It performs a real SMTP handshake — connect, `EHLO`, `STARTTLS`, `AUTH`, `MAIL FROM`, `RCPT TO` — and reports exactly where it succeeds or fails, without sending an actual email unless you ask it to.
 
-Prebuilt binaries are published as GitHub Release assets on every push to
-`main`, so you can run it without installing Go.
+No installation is required: prebuilt binaries for Linux, macOS, and Windows are published automatically on every push, so you can download and run a single executable on any machine.
 
-## Quick start (no install)
+## Why
 
-Binaries are attached to the rolling [`latest` release](https://github.com/nooblk-98/smtp-tester/releases/tag/latest),
-which is updated on every push to `main`.
+Diagnosing "email isn't sending" problems usually means reaching for a full mail client, writing a throwaway script, or digging through application logs. `smtp-tester` isolates the SMTP layer so you can answer a narrow question fast: can this host, on this port, with these credentials, actually talk to the mail server?
+
+- Single static binary, no runtime or dependencies to install.
+- Reports failures per SMTP step (connect, `STARTTLS`, `AUTH`, `MAIL FROM`, `RCPT TO`), not just a generic timeout.
+- Safe by default — it does not send a message unless you explicitly pass `--send`.
+- Scriptable: exits `0` on success and `1` on failure.
+
+## Quick start
+
+Download the binary for your platform from the [`latest` release](https://github.com/nooblk-98/smtp-tester/releases/tag/latest) and run it — no build step required.
 
 **Linux (amd64):**
+
 ```bash
 curl -fsSL -o smtp-tester https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-linux-amd64
 chmod +x smtp-tester
@@ -21,6 +26,7 @@ chmod +x smtp-tester
 ```
 
 **macOS (Apple Silicon):**
+
 ```bash
 curl -fsSL -o smtp-tester https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-darwin-arm64
 chmod +x smtp-tester
@@ -28,81 +34,87 @@ chmod +x smtp-tester
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 Invoke-WebRequest -Uri https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
 .\smtp-tester.exe --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
-Available release assets:
+Other available assets: `smtp-tester-linux-arm64` and `smtp-tester-darwin-amd64`. Tagged releases (`v1.2.3`, ...) get a pinned, versioned release with the same assets, if you'd rather not track `latest`.
 
-| OS      | Arch  | File                              |
-|---------|-------|------------------------------------|
-| Linux   | amd64 | `smtp-tester-linux-amd64`         |
-| Linux   | arm64 | `smtp-tester-linux-arm64`         |
-| macOS   | amd64 | `smtp-tester-darwin-amd64`        |
-| macOS   | arm64 | `smtp-tester-darwin-arm64`        |
-| Windows | amd64 | `smtp-tester-windows-amd64.exe`   |
+> [!TIP]
+> Binaries are also committed to [`bin/`](bin/) on `main` on every build, so `raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/<file>` works as an alternative download source.
 
-Tagged releases (`v1.2.3`, etc.) get a pinned, versioned release with the
-same assets, if you'd rather not track `latest`.
+## Usage
 
-## Flags
-
-| Flag          | Default | Description                                      |
-|---------------|---------|---------------------------------------------------|
-| `--smtphost`  | -       | SMTP server host (required, `--host` also works)  |
-| `--port`      | `587`   | SMTP server port                                   |
-| `--sender`    | -       | MAIL FROM address (required)                       |
-| `--receiver`  | -       | RCPT TO address (required, `--recipient` also works) |
-| `--user`      | -       | Username for AUTH (optional)                       |
-| `--password`  | -       | Password for AUTH (optional)                       |
-| `--tls`       | `false` | Use implicit TLS (e.g. port 465)                   |
-| `--starttls`  | `true`  | Upgrade with STARTTLS if offered                   |
-| `--insecure`  | `false` | Skip TLS certificate verification                  |
-| `--timeout`   | `10s`   | Connection/command timeout                         |
-| `--verbose`   | `false` | Print each SMTP step                               |
-| `--send`      | `false` | Actually deliver a test email to `--receiver` instead of RSET |
-| `--version`   | -       | Print version and exit                             |
-
-## Examples
-
-Basic check on port 587 with STARTTLS:
 ```bash
-./smtp-tester --smtphost=smtp.gmail.com --port=587 --sender=me@example.com --receiver=you@example.com
+smtp-tester --smtphost=<host> --port=<port> --sender=<from> --receiver=<to> [flags]
 ```
 
-Implicit TLS on port 465 with authentication:
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--smtphost` | — | SMTP server host (required). `--host` is an alias. |
+| `--port` | `587` | SMTP server port. |
+| `--sender` | — | `MAIL FROM` address (required). |
+| `--receiver` | — | `RCPT TO` address (required). `--recipient` is an alias. |
+| `--user` | — | Username for `AUTH`, if the server requires authentication. |
+| `--password` | — | Password for `AUTH`. |
+| `--tls` | `false` | Connect using implicit TLS (typically port `465`). |
+| `--starttls` | `true` | Upgrade the connection with `STARTTLS` if the server offers it. |
+| `--insecure` | `false` | Skip TLS certificate verification. Useful for self-signed or internal relays. |
+| `--timeout` | `10s` | Connection and command timeout. |
+| `--send` | `false` | Actually deliver a test email to `--receiver` instead of stopping at `RSET`. |
+| `--verbose` | `false` | Print each SMTP step as it happens. |
+| `--version` | — | Print the version and exit. |
+
+### Examples
+
+Check a handshake over STARTTLS without sending anything:
+
 ```bash
-./smtp-tester --smtphost=smtp.gmail.com --port=465 --tls --user=me@example.com --password=secret \
+smtp-tester --smtphost=smtp.gmail.com --port=587 --sender=me@example.com --receiver=you@example.com
+```
+
+Implicit TLS on port 465, with authentication:
+
+```bash
+smtp-tester --smtphost=smtp.gmail.com --port=465 --tls \
+  --user=me@example.com --password=secret \
   --sender=me@example.com --receiver=you@example.com
 ```
 
-Verbose, self-signed/internal relay:
+Self-signed or internal relay, verbose output:
+
 ```bash
-./smtp-tester --smtphost=mail.internal --port=25 --insecure --verbose \
+smtp-tester --smtphost=mail.internal --port=25 --insecure --verbose \
   --sender=me@internal --receiver=you@internal
 ```
 
-Actually send a test email:
+Actually deliver a test email:
+
 ```bash
-./smtp-tester --smtphost=smtp.gmail.com --port=587 --tls=false --starttls \
+smtp-tester --smtphost=smtp.gmail.com --port=587 \
   --user=me@example.com --password=secret --send \
   --sender=me@example.com --receiver=you@example.com
 ```
 
-Exit code is `0` on success and `1` on failure, so it's easy to use in scripts/CI.
+> [!NOTE]
+> By default `smtp-tester` stops after `RCPT TO` and sends `RSET` — no message is transmitted. Pass `--send` to have it write a minimal test email via `DATA` and actually deliver it to `--receiver`.
+
+Exit codes are `0` on success and `1` on failure, making the tool easy to drop into scripts or CI health checks.
 
 ## Building from source
+
+Requires Go 1.22 or later.
 
 ```bash
 go build -o smtp-tester .
 ```
 
-## How the binaries get published
+## How releases are built
 
-`.github/workflows/build.yml` cross-compiles the CLI for Linux/macOS/Windows
-on every push to `main`, then publishes the binaries as assets on the
-rolling `latest` GitHub Release. Tagged pushes (`v*`) additionally create a
-pinned, versioned Release with the same assets attached. The binaries are
-also committed into `bin/` on `main` as a secondary way to fetch them via
-`raw.githubusercontent.com`.
+[`.github/workflows/build.yml`](.github/workflows/build.yml) cross-compiles the CLI for `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, and `windows/amd64` on every push to `main`, then:
+
+1. Publishes the binaries as assets on the rolling `latest` GitHub Release.
+2. Commits the binaries into [`bin/`](bin/) on `main` as a secondary distribution path.
+3. On version tags (`v*`), also cuts a pinned, versioned release with the same assets.

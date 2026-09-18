@@ -4,32 +4,35 @@ A tiny, dependency-free CLI to test SMTP connectivity: connects, does
 EHLO/STARTTLS/AUTH/MAIL FROM/RCPT TO, then RSET+QUIT — no message is
 actually sent.
 
-Prebuilt binaries are published on every push to `main`, so you can run it
-without installing Go.
+Prebuilt binaries are published as GitHub Release assets on every push to
+`main`, so you can run it without installing Go.
 
 ## Quick start (no install)
 
+Binaries are attached to the rolling [`latest` release](https://github.com/nooblk-98/smtp-tester/releases/tag/latest),
+which is updated on every push to `main`.
+
 **Linux (amd64):**
 ```bash
-curl -fsSL -o smtp-tester https://raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/smtp-tester-linux-amd64
+curl -fsSL -o smtp-tester https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-linux-amd64
 chmod +x smtp-tester
 ./smtp-tester --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 **macOS (Apple Silicon):**
 ```bash
-curl -fsSL -o smtp-tester https://raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/smtp-tester-darwin-arm64
+curl -fsSL -o smtp-tester https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-darwin-arm64
 chmod +x smtp-tester
 ./smtp-tester --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 **Windows (PowerShell):**
 ```powershell
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
+Invoke-WebRequest -Uri https://github.com/nooblk-98/smtp-tester/releases/download/latest/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
 .\smtp-tester.exe --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
-Available prebuilt binaries in `bin/`:
+Available release assets:
 
 | OS      | Arch  | File                              |
 |---------|-------|------------------------------------|
@@ -38,6 +41,9 @@ Available prebuilt binaries in `bin/`:
 | macOS   | amd64 | `smtp-tester-darwin-amd64`        |
 | macOS   | arm64 | `smtp-tester-darwin-arm64`        |
 | Windows | amd64 | `smtp-tester-windows-amd64.exe`   |
+
+Tagged releases (`v1.2.3`, etc.) get a pinned, versioned release with the
+same assets, if you'd rather not track `latest`.
 
 ## Flags
 
@@ -86,7 +92,8 @@ go build -o smtp-tester .
 ## How the binaries get published
 
 `.github/workflows/build.yml` cross-compiles the CLI for Linux/macOS/Windows
-on every push to `main`, then commits the resulting binaries into `bin/` on
-`main` (skipping CI on that commit) so they're reachable via
-`raw.githubusercontent.com`. Tagged pushes (`v*`) additionally create a
-GitHub Release with the same binaries attached.
+on every push to `main`, then publishes the binaries as assets on the
+rolling `latest` GitHub Release. Tagged pushes (`v*`) additionally create a
+pinned, versioned Release with the same assets attached. The binaries are
+also committed into `bin/` on `main` as a secondary way to fetch them via
+`raw.githubusercontent.com`.

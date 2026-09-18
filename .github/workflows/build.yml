@@ -84,8 +84,8 @@ jobs:
 
       - name: Commit binaries to bin/ for raw URL access
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "Lahiru S Liyanage"
+          git config user.email "liyanagelsofficial@gmail.com"
           mkdir -p bin
           cp dist/* bin/
           git add bin

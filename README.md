@@ -9,26 +9,23 @@ without installing Go.
 
 ## Quick start (no install)
 
-Replace `<your-github-username>` below with your GitHub username/org once
-this repo is pushed.
-
 **Linux (amd64):**
 ```bash
-curl -fsSL -o smtp-tester https://raw.githubusercontent.com/<your-github-username>/smtp-tester/main/bin/smtp-tester-linux-amd64
+curl -fsSL -o smtp-tester https://raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/smtp-tester-linux-amd64
 chmod +x smtp-tester
 ./smtp-tester --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 **macOS (Apple Silicon):**
 ```bash
-curl -fsSL -o smtp-tester https://raw.githubusercontent.com/<your-github-username>/smtp-tester/main/bin/smtp-tester-darwin-arm64
+curl -fsSL -o smtp-tester https://raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/smtp-tester-darwin-arm64
 chmod +x smtp-tester
 ./smtp-tester --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 
 **Windows (PowerShell):**
 ```powershell
-Invoke-WebRequest -Uri https://raw.githubusercontent.com/<your-github-username>/smtp-tester/main/bin/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/nooblk-98/smtp-tester/main/bin/smtp-tester-windows-amd64.exe -OutFile smtp-tester.exe
 .\smtp-tester.exe --smtphost=smtp.example.com --port=587 --sender=a@x.com --receiver=b@y.com
 ```
 

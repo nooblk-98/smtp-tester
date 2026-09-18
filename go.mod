@@ -1,3 +1,3 @@
-module github.com/lahiru-liyanage/smtp-tester
+module github.com/nooblk-98/smtp-tester
 
 go 1.22
